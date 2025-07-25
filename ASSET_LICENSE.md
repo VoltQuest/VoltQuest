@@ -22,9 +22,9 @@ Use the following format when adding new entries:
 - `resources/assets/path/to/file.ext` — © <year> `your-name` — CC BY-SA 4.0 
 
 ### Original Asset List
-- `resources/assets/images/battery.png` — © <year> `shadow-foss` — CC BY-SA 4.0 
+- `resources/assets/images/battery.png` — © 2025 `shadow-foss` — CC BY-SA 4.0 
 
-- `resources/assets/images/LED.png` — © <year> `shadow-foss` — CC BY-SA 4.0 
+- `resources/assets/images/LED.png` — © 2025 `shadow-foss` — CC BY-SA 4.0 
 
 
 ---
