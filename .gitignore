@@ -1,36 +1,66 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
+# --- Build Artifacts (C/C++/CMake) ---
 *.o
 *.obj
-
-# Precompiled Headers
+*.lo
+*.d
 *.gch
 *.pch
 
-# Compiled Dynamic libraries
+# --- Binary Outputs ---
+*.a
+*.lib
 *.so
 *.dylib
 *.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
 *.exe
 *.out
 *.app
 voltquest
 
-# Build Directory
-/build
+# --- CMake-generated files ---
+/build/
+/bin/
+/lib/
+/dist/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# --- Third-party libraries ---
+/external/**
+
+# --- IDE & Editor files ---
+
+## VSCode
+.vscode/
+.code-workspace
+
+## CLion / JetBrains
+.idea/
+cmake-build-*/
+
+## Xcode
+*.xcodeproj
+*.xcworkspace
+*.xcuserdata
+*.xcuserstate
+
+## Visual Studio
+*.sdf
+*.suo
+*.user
+*.vcxproj*
+*.pdb
+*.ipch
+*.log
+
+# --- OS & Editor Metadata ---
+.DS_Store
+*~
+*.swp
+*.bak
+*.tmp
+
+
