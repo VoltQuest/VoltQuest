@@ -2,8 +2,8 @@
 #define PATH_UTILS_H
 #include <string>
 
-void initBasePath();
-std::string getResourcePath(const std::string &relativePath);
-
+inline std::string getResourcePath(const std::string &relativePath) {
+  return "./resources/" + relativePath;
+}
 
 #endif // !PATH_UTILS_H
