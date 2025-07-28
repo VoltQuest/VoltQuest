@@ -31,10 +31,10 @@ To run:
 
 ```bash
 # On Linux/macOS
-./build/voltquest
+./voltquest
 
 # On Windows (PowerShell)
-.\build\voltquest.exe
+.\voltquest.exe
 
 ```
 
