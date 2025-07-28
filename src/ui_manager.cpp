@@ -36,35 +36,37 @@ void unloadUITexture(int IMG_ID) { UnloadTexture(textures[IMG_ID]); }
 // ─────────────────────────────────────────────────────
 // Draw Functions
 // ─────────────────────────────────────────────────────
-void drawUIRect(float outlineSize, const Rectangle &bounds) {
-  DrawRectangleRounded(bounds, 0.2f, 6, Color{151, 151, 165, 255});
+void drawUIRect(float outlineSize, float roundness, const Rectangle &bounds) {
+  DrawRectangleRounded(bounds, roundness, 6, Color{151, 151, 165, 255});
   DrawRectangleRounded(
       Rectangle{bounds.x + (outlineSize * safeScreenScale) / 2.0f,
                 bounds.y + (outlineSize * safeScreenScale) / 2.0f,
                 bounds.width - outlineSize * safeScreenScale,
                 bounds.height - outlineSize * safeScreenScale},
-      0.2f, 6, WHITE);
+      roundness, 6, WHITE);
   DrawRectangleRounded(
       Rectangle{bounds.x + ((outlineSize * 2.0f) * safeScreenScale) / 2.0f,
                 bounds.y + ((outlineSize * 2.0f) * safeScreenScale) / 2.0f,
                 bounds.width - (outlineSize * 2.0f) * safeScreenScale,
                 bounds.height - (outlineSize * 2.0f) * safeScreenScale},
-      0.2f, 6, Color{219, 221, 232, 255});
+      roundness, 6, Color{219, 221, 232, 255});
 }
 
 void drawUIButton(const UIButton &button) {
   if (button.isfocused) {
-    DrawRectangleRoundedLinesEx(button.bounds, 0.2f, 6, 5.0f * safeScreenScale,
+    DrawRectangleRoundedLinesEx(button.bounds, 0.15f, 6, 5.0f * safeScreenScale,
                                 SKYBLUE);
   }
 
-  drawUIRect(12.0f, button.bounds);
+  drawUIRect(12.0f, 0.15f, button.bounds);
   drawUITextCentered(button.fontSize, button.bounds, button.text,
                      button.textColor);
 }
 
-void drawUIPanel(float outlineSize, const Rectangle &bounds) {
-  drawUIRect(outlineSize, bounds);
+void drawUIPanel(const Rectangle &bounds) {
+  float outlineSize = 18.0f;
+  float roundness = 0.1f;
+  drawUIRect(outlineSize, roundness, bounds);
 }
 
 void drawImage(int IMG_ID, const Rectangle &bounds) {
@@ -110,14 +112,14 @@ void drawComponentsPanel(std::vector<std::shared_ptr<MovableObject>> &objects,
       static_cast<float>(globalSettings.screenHeight),
   };
 
-  drawUIPanel(20.0f, panelBounds);
+  drawUIPanel(panelBounds);
 
   float margin = 32 * safeScreenScale;
   float btnSize = 100 * safeScreenScale;
   float spacing = 20 * safeScreenScale;
-  int columns = 3;
+  int columns = 2;
 
-  std::vector<std::string> componentNames = {"Battery", "LED", "Wire"};
+  std::vector<std::string> componentNames = {"Battery", "LED"};
   int totalButtons = componentNames.size();
 
   float totalGridWidth = columns * btnSize + (columns - 1) * spacing;
@@ -136,7 +138,7 @@ void drawComponentsPanel(std::vector<std::shared_ptr<MovableObject>> &objects,
         btnSize,
     };
 
-    drawUIRect(8.0f, btnRect);
+    drawUIRect(8.0f, 0.2f, btnRect);
     drawUITextCentered(18, btnRect, componentNames[i], DARKGRAY);
 
     if (CheckCollisionPointRec(GetMousePosition(), btnRect) &&

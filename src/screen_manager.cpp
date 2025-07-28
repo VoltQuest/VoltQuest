@@ -94,7 +94,7 @@ void drawStartMenu() {
 
 void drawOptionsMenu() {
   ClearBackground(Color{58, 71, 80, 255});
-  drawUIPanel(20.0f, optionsMenu::panelBounds);
+  drawUIPanel(optionsMenu::panelBounds);
   drawUIText(80, optionsMenu::optionsTextPos, "OPTIONS",
              Color{0, 146, 255, 255});
 }

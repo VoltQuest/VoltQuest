@@ -26,10 +26,10 @@ void unloadAllUITexture();
 void unloadUITexture(int IMG_ID);
 
 // Draw Functions
-void drawUIRect(float outlineSize, const Rectangle &bounds);
+void drawUIRect(float outlineSize, float roundness, const Rectangle &bounds);
 void drawUIButton(const UIButton &button);
 void drawImage(int IMG_ID, const Rectangle &bounds);
-void drawUIPanel(float outlineSize, const Rectangle &bounds);
+void drawUIPanel(const Rectangle &bounds);
 void drawUIText(int fontSize, const Vector2 &textPos, const std::string &text,
                 const Color &textColor);
 void drawUITextCentered(int fontSize, const Rectangle &bounds,
