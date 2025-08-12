@@ -38,8 +38,6 @@ To run:
 
 ```
 
-> ✅ `cmake -Bbuild` automatically creates the `build/` directory and detects your toolchain.
-
 ----------
 
 ## 🧭 Code Style Guide
