@@ -6,7 +6,7 @@
 struct MovableObject {
   Vector2 position;
   float rotation;
-  bool isActive = false;
+  bool is_active = false;
   Texture2D texture;
 
   MovableObject(Vector2 pos = {0, 0}, float rotate = 0.0f)
@@ -18,19 +18,6 @@ struct MovableObject {
   virtual void unloadObjectTexture() = 0;
 
   virtual Rectangle getCollider() const = 0;
-  virtual Rectangle getPositiveCollider() const { return {}; }
-  virtual Rectangle getNegativeCollider() const { return {}; }
-
-  virtual Vector2 getPositivePinPosition() const {
-    Rectangle pos = getPositiveCollider();
-    return {pos.x + pos.width / 2, pos.y + pos.height / 2};
-  }
-
-  virtual Vector2 getNegativePinPosition() const {
-    Rectangle neg = getNegativeCollider();
-    return {neg.x + neg.width / 2, neg.y + neg.height / 2};
-  }
-
   virtual ~MovableObject() = default;
 };
 

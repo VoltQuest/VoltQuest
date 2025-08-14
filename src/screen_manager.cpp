@@ -1,5 +1,5 @@
 #include "../include/screen_manager.hpp"
-#include "../include/level.hpp"
+#include "../include/level_manager.hpp"
 #include "../include/settings.hpp"
 #include "../include/ui_manager.hpp"
 #include "../include/ui_utils.hpp"
@@ -124,7 +124,7 @@ void drawCurrentScreen() {
   }
 
   case SCREEN::GAME: {
-    updateLevel();
+    ElectronicsLevel::processLevel();
     if (IsKeyPressed(KEY_BACKSPACE)) {
       currentScreen = SCREEN::START_MENU;
     }

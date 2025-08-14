@@ -2,6 +2,7 @@
 #include "../include/game_objects/electronic_components/output/led.hpp"
 #include "../include/game_objects/electronic_components/power/battery.hpp"
 #include "../include/game_objects/electronic_components/wiring/wire.hpp"
+#include "../include/level_manager.hpp"
 #include "../include/path_utils.hpp"
 #include "../include/ui_utils.hpp"
 #include "raylib.h"
@@ -100,10 +101,11 @@ void drawUITextCentered(int fontSize, const Rectangle &bounds,
 // InGame UI functions
 // ─────────────────────────────────────────────────────
 
-void drawComponentsPanel(std::vector<std::shared_ptr<MovableObject>> &objects,
-                         std::shared_ptr<MovableObject> &activeObject,
-                         std::vector<Wire> &wires, bool &isPlacingWire,
-                         std::shared_ptr<MovableObject> wireStartObject) {
+void drawComponentsPanel(
+    std::vector<std::shared_ptr<ElectronicComponent>> &objects,
+    std::shared_ptr<ElectronicComponent> &activeObject,
+    std::vector<Wire> &wires, bool &isPlacingWire,
+    std::shared_ptr<ElectronicComponent> &wireStartObject) {
   float panelWidth = 450.0f * safeScreenScale;
   Rectangle panelBounds = {
       globalSettings.screenWidth - panelWidth,
@@ -198,7 +200,8 @@ void drawComponentsPanel(std::vector<std::shared_ptr<MovableObject>> &objects,
       lines.push_back("Volt: 1.5V");
     } else if (auto led = std::dynamic_pointer_cast<Led>(activeObject)) {
       lines.push_back("Type: LED");
-      lines.push_back(std::string("State: ") + (led->status ? "ON" : "OFF"));
+      lines.push_back(std::string("State: ") +
+                      (led->is_enabled ? "ON" : "OFF"));
     } else {
       lines.push_back("Type: Unknown");
     }
@@ -215,7 +218,7 @@ void drawComponentsPanel(std::vector<std::shared_ptr<MovableObject>> &objects,
 
   if (CheckCollisionPointRec(GetMousePosition(), resetBtn) &&
       IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-    resetLevel();
+    ElectronicsLevel::resetLevel();
   }
 }
 
