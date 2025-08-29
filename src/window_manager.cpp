@@ -1,40 +1,25 @@
 #include "../include/window_manager.hpp"
 #include "../include/settings.hpp"
 #include "raylib.h"
+#include <iostream>
 
 void createWindow() {
 
-  // Create a temporary window to retrieve monitor info, then close it
+  if (globalSettings.fullscreen) {
+    SetConfigFlags(FLAG_FULLSCREEN_MODE);
+  } else {
+    SetConfigFlags(FLAG_BORDERLESS_WINDOWED_MODE);
+  }
   InitWindow(0, 0, "VoltQuest");
-
-#if defined(__ANDROID__)
-
-  globalSettings.monitorWidth = GetScreenWidth();
-  globalSettings.monitorHeight = GetScreenHeight();
-
-#else
-
-  globalSettings.currentMonitor = GetCurrentMonitor();
-  globalSettings.monitorWidth = GetMonitorWidth(globalSettings.currentMonitor);
-  globalSettings.monitorHeight =
-      GetMonitorHeight(globalSettings.currentMonitor);
-#endif
+  int screenWidth = GetScreenWidth();
+  int screenHeight = GetScreenHeight();
 
   if (overrideSettings()) {
-    globalSettings.screenWidth = globalSettings.monitorWidth;
-    globalSettings.screenHeight = globalSettings.monitorHeight;
+    globalSettings.screenWidth = screenWidth;
+    globalSettings.screenHeight = screenHeight;
     globalSettings.refreshRate = 60;
     globalSettings.fullscreen = true;
     saveSettings();
-  }
-
-  if (globalSettings.fullscreen) {
-    globalSettings.screenWidth = globalSettings.monitorWidth;
-    globalSettings.screenHeight = globalSettings.monitorHeight;
-
-    SetConfigFlags(FLAG_FULLSCREEN_MODE);
-  } else {
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
   }
 
   // Create a the game window

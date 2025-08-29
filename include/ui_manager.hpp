@@ -1,8 +1,6 @@
 #ifndef UI_MANAGER_H
 #define UI_MANAGER_H
 
-#include "../include/game_objects/electronic_components/wiring/wire.hpp"
-#include "../include/game_objects/movable_object.hpp"
 #include "raylib.h"
 #include <memory>
 #include <string>
@@ -34,13 +32,6 @@ void drawUIText(int fontSize, const Vector2 &textPos, const std::string &text,
                 const Color &textColor);
 void drawUITextCentered(int fontSize, const Rectangle &bounds,
                         const std::string &text, const Color &textColor);
-
-// Ingame UI Draw Functions
-void drawComponentsPanel(
-    std::vector<std::shared_ptr<ElectronicComponent>> &objects,
-    std::shared_ptr<ElectronicComponent> &activeObject,
-    std::vector<Wire> &wires, bool &isPlacingWire,
-    std::shared_ptr<ElectronicComponent> &wireStartObject);
 
 // Input Functions
 bool isUIButtonPressed(const UIButton &button);

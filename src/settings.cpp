@@ -6,7 +6,7 @@
 #include <string>
 
 static bool overrideDisplaySettings = true;
-std::string settingsPath = getResourcePath("settings.cfg");
+std::string settingsPath = "./resources/settings.cfg";
 
 void saveSettings() {
   std::ofstream settingsFile{settingsPath, std::ios::out};
@@ -46,7 +46,7 @@ void loadSettings() {
     std::string value = trim(line.substr(equalPos + 1));
 
     // Map keys to globalSettings
-    std::cout << key << ":" << value;
+    std::cout << key << ":" << value << std::endl;
     if (key == "ScreenWidth") {
       globalSettings.screenWidth = std::stoi(value);
       overrideDisplaySettings = false;

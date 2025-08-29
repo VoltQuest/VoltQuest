@@ -32,9 +32,6 @@ Vector2 optionsTextPos;
 } // namespace optionsMenu
 
 void updateLayout() {
-  screenScaleX = static_cast<float>(globalSettings.screenWidth) / baseWidth;
-  screenScaleY = static_cast<float>(globalSettings.screenHeight) / baseHeight;
-  safeScreenScale = (screenScaleX + screenScaleY) / 2.0f;
   // ─── Start Menu ────────────────────────────────
   {
     startMenu::logoSize = 450.0f * safeScreenScale;

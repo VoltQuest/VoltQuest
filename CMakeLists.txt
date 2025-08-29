@@ -11,6 +11,8 @@ set(BUILD_GAMES    OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 # Fetch raylib into /external directory
+
+message(STATUS "Cloning raylib (this might take a while)...")
 FetchContent_Declare(
   raylib
   GIT_REPOSITORY https://github.com/raysan5/raylib.git
@@ -18,6 +20,8 @@ FetchContent_Declare(
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/raylib
 )
 FetchContent_MakeAvailable(raylib)
+
+message(STATUS "Cloned raylib successfully")
 
 file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 add_executable(voltquest ${SRC_FILES})

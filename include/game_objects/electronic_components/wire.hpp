@@ -1,7 +1,7 @@
 #ifndef WIRE_HPP
 #define WIRE_HPP
 
-#include "../electronics_base.hpp"
+#include "electronics_base.hpp"
 #include "raylib.h"
 
 struct Wire {
@@ -18,8 +18,8 @@ struct Wire {
     Vector2 end = end_pin->getCenterPosition();
     Color wireColor = end_pin->color;
 
-    DrawLineEx(start, end, 6.0f, BLACK);     // Outline
-    DrawLineEx(start, end, 4.0f, wireColor); // Colored wire
+    DrawLineEx(start, end, 8.0f, BLACK);     // Outline
+    DrawLineEx(start, end, 6.0f, wireColor); // Colored wire
   }
 };
 
