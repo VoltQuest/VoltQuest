@@ -1,11 +1,15 @@
 #include "../include/level_manager.hpp"
 #include "../include/game_objects/electronic_components/electronics_base.hpp"
+#include "../include/game_objects/electronic_components/passive_components.hpp"
 #include "../include/game_objects/electronic_components/wire.hpp"
 #include "../include/input_manager.hpp"
+#include "../include/path_utils.hpp"
 #include "../include/simulation/electronics_simulation.hpp"
+#include "../include/texture_manager.hpp"
 #include "../include/ui_manager.hpp"
 #include "raylib.h"
 #include "raymath.h"
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -41,9 +45,13 @@ void ElectronicsLevel::resetLevel() {
 }
 
 void ElectronicsLevel::loadTextures() {
-  for (auto &obj : objects) {
-    obj->loadObjectTexture();
-  }
+  TextureManager::LoadSVG(
+      "battery", getResourcePath("assets/images/battery.svg"), safeScreenScale);
+  TextureManager::LoadSVG("led", getResourcePath("assets/images/led.svg"),
+                          safeScreenScale);
+  TextureManager::LoadSVG("resistor",
+                          getResourcePath("assets/images/resistor.svg"),
+                          safeScreenScale);
 }
 
 void ElectronicsLevel::updateLevel() {
@@ -106,6 +114,7 @@ void ElectronicsLevel::updateLevel() {
 }
 
 void ElectronicsLevel::drawLevel() {
+  BeginDrawing();
   ClearBackground(GRAY);
 
   // Draw all components
@@ -122,13 +131,14 @@ void ElectronicsLevel::drawLevel() {
   if (is_placing_wire && wireStartObject && wireStartPin) {
     Vector2 start = wireStartPin->getCenterPosition();
     Color wireColor = wireStartPin->color;
-    DrawLineEx(start, mouse_pos, 8.0f, BLACK);     // Outline
-    DrawLineEx(start, mouse_pos, 6.0f, wireColor); // Actual wire
+    DrawLineEx(start, mouse_pos, 8.0f * safeScreenScale, BLACK); // Outline
+    DrawLineEx(start, mouse_pos, 6.0f * safeScreenScale,
+               wireColor); // Actual wire
   }
-
   // Draw UI side panel
   drawComponentsPanel(objects, activeObject, wires, is_placing_wire,
                       wireStartObject);
+  EndDrawing();
 }
 
 void ElectronicsLevel::drawComponentsPanel(
@@ -151,7 +161,7 @@ void ElectronicsLevel::drawComponentsPanel(
   float spacing = 20 * safeScreenScale;
   int columns = 2;
 
-  std::vector<std::string> componentNames = {"Battery", "LED", "RESISTOR"};
+  std::vector<std::string> componentNames = {"Battery", "Led", "Resistor"};
   int totalButtons = componentNames.size();
 
   float totalGridWidth = columns * btnSize + (columns - 1) * spacing;
@@ -180,15 +190,13 @@ void ElectronicsLevel::drawComponentsPanel(
 
       if (name == "Battery") {
         auto newObj = std::make_shared<Battery>(Vector2{100, 100});
-        newObj->loadObjectTexture();
         objects.push_back(newObj);
-      } else if (name == "LED") {
+      } else if (name == "Led") {
         auto newObj = std::make_shared<Led>(Vector2{100, 100});
-        newObj->loadObjectTexture();
         objects.push_back(newObj);
-      } else if (name == "Wire") {
-        isPlacingWire = true;
-        wireStartObject = nullptr;
+      } else if (name == "Resistor") {
+        auto newObj = std::make_shared<Resistor>(Vector2{100, 100});
+        objects.push_back(newObj);
       }
     }
   }
@@ -243,8 +251,10 @@ void ElectronicsLevel::drawComponentsPanel(
     DrawText(lines[i].c_str(), textX, inspectorStartY + i * lineSpacing,
              (i == 0 ? labelFontSize : valueFontSize), DARKGRAY);
   }
-  Rectangle resetBtn = {globalSettings.screenWidth - 300.0f,
-                        globalSettings.screenHeight - 100.0f, 160, 40};
+  Rectangle resetBtn = {panelBounds.x + panelBounds.width / 2.0f,
+                        panelBounds.y + panelBounds.height -
+                            160.0f * safeScreenScale,
+                        160 * safeScreenScale, 40 * safeScreenScale};
   DrawRectangleRec(resetBtn, RED);
   DrawText("Reset Level", resetBtn.x + 20, resetBtn.y + 10, 20, WHITE);
 

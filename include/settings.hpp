@@ -14,6 +14,7 @@ struct settings {
 };
 
 inline settings globalSettings;
+void initSettingsPath();
 void saveSettings();
 std::string trim(const std::string &s);
 void loadSettings();

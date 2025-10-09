@@ -19,7 +19,6 @@ extern bool is_placing_wire;
 extern std::shared_ptr<ElectronicComponent> wireStartObject;
 extern Pin *wireStartPin;
 extern Pin *wire_end_pin;
-
 void processLevel();
 void resetLevel();
 void loadTextures();
