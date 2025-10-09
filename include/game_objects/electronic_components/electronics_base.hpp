@@ -1,5 +1,6 @@
 #ifndef ELECTRONICS_BASE_HPP
 #define ELECTRONICS_BASE_HPP
+#include "../../ui_utils.hpp"
 #include "../movable_object.hpp"
 #include "raylib.h"
 #include <cstdint>
@@ -31,13 +32,14 @@ inline const std::string &GetComponentName(ComponentLabel type) {
 struct Pin {
   Vector2 relative_position;
   Rectangle collider;
+  float colliderSize = 16.0f * safeScreenScale;
   PinType type;
   Color color;
   float voltage = 0.0f;
   float current = 0.0f;
   bool is_connected = false;
 
-  Pin(Vector2 relPos, PinType pinType, float colliderSize = 18.0f)
+  Pin(Vector2 relPos, PinType pinType)
       : relative_position(relPos), type(pinType) {
     collider.width = colliderSize;
     collider.height = colliderSize;
@@ -53,8 +55,8 @@ struct Pin {
   }
 
   void updateCollider(const Vector2 &componentPos) {
-    collider.x = componentPos.x + relative_position.x;
-    collider.y = componentPos.y + relative_position.y;
+    collider.x = componentPos.x + relative_position.x - (colliderSize / 2.0f);
+    collider.y = componentPos.y + relative_position.y - (colliderSize / 2.0f);
   }
 
   bool isHovered() const {
@@ -62,14 +64,14 @@ struct Pin {
   }
 
   Vector2 getCenterPosition() const {
-    return {collider.x + collider.width / 2.0f,
-            collider.y + collider.height / 2.0f};
+    return {collider.x + colliderSize / 2.0f, collider.y + colliderSize / 2.0f};
   }
 };
 
 struct ElectronicComponent : public MovableObject {
   float voltage;
   float current;
+  float resistance;
   bool powered = false;
   bool damaged = false;
   ComponentLabel label;
@@ -84,8 +86,8 @@ struct ElectronicComponent : public MovableObject {
   virtual void drawPins() const {
     for (const auto &pin : pins) {
       if (pin.isHovered()) {
-        DrawRectangle(pin.collider.x, pin.collider.y, pin.collider.width,
-                      pin.collider.height, pin.color);
+        DrawRectangle(pin.collider.x, pin.collider.y, pin.colliderSize,
+                      pin.colliderSize, pin.color);
       }
     }
   };

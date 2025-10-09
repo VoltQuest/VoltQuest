@@ -1,15 +1,10 @@
 #include "../include/window_manager.hpp"
 #include "../include/settings.hpp"
 #include "raylib.h"
-#include <iostream>
 
 void createWindow() {
+#ifndef EMSCRIPTEN
 
-  if (globalSettings.fullscreen) {
-    SetConfigFlags(FLAG_FULLSCREEN_MODE);
-  } else {
-    SetConfigFlags(FLAG_BORDERLESS_WINDOWED_MODE);
-  }
   InitWindow(0, 0, "VoltQuest");
   int screenWidth = GetScreenWidth();
   int screenHeight = GetScreenHeight();
@@ -21,9 +16,23 @@ void createWindow() {
     globalSettings.fullscreen = true;
     saveSettings();
   }
+  if (globalSettings.fullscreen) {
+    SetWindowState(FLAG_FULLSCREEN_MODE);
+  } else {
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
+  }
 
   // Create a the game window
   SetWindowSize(globalSettings.screenWidth, globalSettings.screenHeight);
+
+#else
+  globalSettings.screenWidth = 960;
+  globalSettings.screenHeight = 540;
+  globalSettings.fullscreen = false;
+  globalSettings.refreshRate = 60;
+  InitWindow(globalSettings.screenWidth, globalSettings.screenHeight,
+             "VoltQuest");
+#endif
 
   SetExitKey(0); // Disables Escape key from CloseWindow
   SetTargetFPS(globalSettings.refreshRate);

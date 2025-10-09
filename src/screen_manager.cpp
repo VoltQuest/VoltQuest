@@ -13,14 +13,20 @@ namespace startMenu {
 float logoSize;
 Rectangle logoBounds;
 Vector2 buttonSize;
+int button_count;
 Rectangle playButtonBounds;
 Rectangle optionsButtonBounds;
 Rectangle quitButtonBounds;
 
 UIButton playButton;
 UIButton optionsButton;
+
+#if defined(EMSCRIPTEN)
+UIButton *buttonsArray[2] = {&playButton, &optionsButton};
+#else
 UIButton quitButton;
 UIButton *buttonsArray[3] = {&playButton, &optionsButton, &quitButton};
+#endif
 
 int focusedButton = 0;
 } // namespace startMenu
@@ -41,6 +47,9 @@ void updateLayout() {
         (baseWidth / 2.0f * screenScaleX) - (startMenu::logoSize / 2.0f),
         (baseHeight / 2.0f * screenScaleY) - (startMenu::logoSize),
         startMenu::logoSize, startMenu::logoSize};
+
+#ifndef EMSCRIPTEN
+    startMenu::button_count = 3;
 
     startMenu::playButton = {
         {(baseWidth / 2.0f * screenScaleX) - (startMenu::buttonSize.x / 2.0f),
@@ -65,6 +74,26 @@ void updateLayout() {
         "QUIT",
         55,
         RED};
+
+#else
+    startMenu::button_count = 2;
+    startMenu::playButton = {
+        {(baseWidth / 2.0f * screenScaleX) - (startMenu::buttonSize.x / 2.0f),
+         (baseHeight / 1.7f * screenScaleY), startMenu::buttonSize.x,
+         startMenu::buttonSize.y},
+        "PLAY",
+        55,
+        Color{255, 198, 0, 255}};
+
+    startMenu::optionsButton = {
+        {(baseWidth / 2.0f * screenScaleX) - (startMenu::buttonSize.x / 2.0f),
+         (baseHeight / 1.7f * screenScaleY) + (180.f * screenScaleY),
+         startMenu::buttonSize.x, startMenu::buttonSize.y},
+        "OPTIONS",
+        55,
+        Color{0, 146, 255, 255}};
+
+#endif
   }
 
   // ─── Options Menu ──────────────────────────────
@@ -86,7 +115,9 @@ void drawStartMenu() {
   drawImage(IMGLOGO, startMenu::logoBounds);
   drawUIButton(startMenu::playButton);
   drawUIButton(startMenu::optionsButton);
+#ifndef EMSCRIPTEN
   drawUIButton(startMenu::quitButton);
+#endif // !EMSCRIPTEN
 }
 
 void drawOptionsMenu() {
@@ -99,21 +130,29 @@ void drawOptionsMenu() {
 void drawCurrentScreen() {
   switch (currentScreen) {
   case SCREEN::START_MENU: {
+
+    BeginDrawing();
     drawStartMenu();
-    updateKeyboardNavigation(3, startMenu::focusedButton,
+    EndDrawing();
+    updateKeyboardNavigation(startMenu::button_count, startMenu::focusedButton,
                              startMenu::buttonsArray);
     if (isUIButtonPressed(startMenu::playButton)) {
       currentScreen = SCREEN::GAME;
     } else if (isUIButtonPressed(startMenu::optionsButton)) {
       currentScreen = SCREEN::OPTIONS_MENU;
-    } else if (isUIButtonPressed(startMenu::quitButton)) {
+    }
+#ifndef EMSCRIPTEN
+    else if (isUIButtonPressed(startMenu::quitButton)) {
       globalSettings.isGameRunning = false;
     }
+#endif
     break;
   }
 
   case SCREEN::OPTIONS_MENU: {
+    BeginDrawing();
     drawOptionsMenu();
+    EndDrawing();
     if (IsKeyDown(KEY_ESCAPE)) {
       currentScreen = SCREEN::START_MENU;
     }
@@ -122,7 +161,7 @@ void drawCurrentScreen() {
 
   case SCREEN::GAME: {
     ElectronicsLevel::processLevel();
-    if (IsKeyPressed(KEY_BACKSPACE)) {
+    if (IsKeyPressed(KEY_Q)) {
       currentScreen = SCREEN::START_MENU;
     }
   }
