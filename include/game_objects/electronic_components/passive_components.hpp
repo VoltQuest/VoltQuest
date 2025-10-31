@@ -9,7 +9,6 @@
 #include <string>
 
 struct Resistor : public ElectronicComponent {
-  VoltInput inputs;
 
   const Texture2D &component_texture = TextureManager::Get("resistor");
   // Base dimensions and offsets as constants
@@ -54,7 +53,6 @@ struct Resistor : public ElectronicComponent {
   Rectangle getCollider() const override { return collider; }
 
   void update() override {
-    inputs.mouseDragRect(collider, position, is_active);
     BAND1 = {position.x + 80.0f * screenScaleX,
              position.y + 8.0f * screenScaleY, 6.0f * safeScreenScale,
              28.0f * safeScreenScale};

@@ -9,7 +9,6 @@
 #include <string>
 
 struct Battery : public ElectronicComponent {
-  VoltInput inputs;
 
   const Texture2D &component_texture = TextureManager::Get("battery");
 
@@ -45,7 +44,6 @@ struct Battery : public ElectronicComponent {
   Rectangle getCollider() const override { return collider; }
 
   void update() override {
-    inputs.mouseDragRect(collider, position, is_dragged);
     collider.x = position.x;
     collider.y = position.y;
     for (auto &pin : pins) {

@@ -17,18 +17,6 @@ enum class ComponentLabel : uint16_t {
   Switch = 3,
 };
 
-inline const std::unordered_map<ComponentLabel, std::string> ComponentNames{
-    {ComponentLabel::Battery, "Battery"},
-    {ComponentLabel::Led, "Led"},
-    {ComponentLabel::Resistor, "Resistor"},
-    {ComponentLabel::Switch, "Switch"}};
-
-inline const std::string &GetComponentName(ComponentLabel type) {
-  static const std::string unknown = "Unknown";
-  auto it = ComponentNames.find(type);
-  return (it != ComponentNames.end()) ? it->second : unknown;
-}
-
 struct Pin {
   Vector2 relative_position;
   Rectangle collider;
