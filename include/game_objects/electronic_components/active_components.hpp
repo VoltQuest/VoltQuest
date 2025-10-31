@@ -12,7 +12,6 @@
 
 struct Led : public ElectronicComponent {
   ComponentLabel label = ComponentLabel::Led;
-  VoltInput inputs;
 
   const Texture2D &component_texture = TextureManager::Get("led");
 
@@ -62,7 +61,6 @@ struct Led : public ElectronicComponent {
       texture_box.x = 0.0f;
     }
 
-    inputs.mouseDragRect(collider, position, is_dragged);
     for (auto &pin : pins) {
       pin.updateCollider(position);
     }
