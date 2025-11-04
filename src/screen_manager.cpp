@@ -112,7 +112,7 @@ void updateLayout() {
 
 void drawStartMenu() {
   ClearBackground(Color{58, 71, 80, 255});
-  drawImage(IMGLOGO, startMenu::logoBounds);
+  drawImage("voltquest_logo", startMenu::logoBounds);
   drawUIButton(startMenu::playButton);
   drawUIButton(startMenu::optionsButton);
 #ifndef EMSCRIPTEN

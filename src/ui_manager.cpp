@@ -1,6 +1,7 @@
 #include "../include/ui_manager.hpp"
 #include "../include/level_manager.hpp"
 #include "../include/path_utils.hpp"
+#include "../include/texture_manager.hpp"
 #include "../include/ui_utils.hpp"
 #include "raylib.h"
 #include <cmath>
@@ -8,28 +9,7 @@
 #include <string>
 #include <vector>
 
-static Texture2D textures[IMGCOUNT];
 void resetLevel();
-
-// ─────────────────────────────────────────────────────
-// Manage Textures
-// ─────────────────────────────────────────────────────
-void loadAllUITextures() {
-  textures[IMGLOGO] =
-      LoadTexture(getResourcePath("assets/logos/VoltQuest.png").c_str());
-}
-
-void loadUITexture(int IMG_ID, const std::string &texturePath) {
-  textures[IMG_ID] = LoadTexture(getResourcePath(texturePath).c_str());
-}
-
-void unloadAllUITexture() {
-  for (int i = 0; i < IMGCOUNT; ++i) {
-    UnloadTexture(textures[i]);
-  }
-}
-
-void unloadUITexture(int IMG_ID) { UnloadTexture(textures[IMG_ID]); }
 
 // ─────────────────────────────────────────────────────
 // Draw Functions
@@ -67,10 +47,10 @@ void drawUIPanel(const Rectangle &bounds) {
   drawUIRect(outlineSize, roundness, bounds);
 }
 
-void drawImage(int IMG_ID, const Rectangle &bounds) {
-  DrawTexturePro(textures[IMG_ID],
-                 {0.0f, 0.0f, (float)textures[IMG_ID].width,
-                  (float)textures[IMG_ID].height},
+void drawImage(const std::string &name, const Rectangle &bounds) {
+  const Texture2D &texture = TextureManager::Get(name);
+  DrawTexturePro(texture,
+                 {0.0f, 0.0f, (float)texture.width, (float)texture.height},
                  bounds, {0.0f, 0.0f}, 0.0f, WHITE);
 }
 
