@@ -1,4 +1,5 @@
 #include "../include/level_manager.hpp"
+#include "../include/game_objects/electronic_components/active_components.hpp"
 #include "../include/game_objects/electronic_components/electronics_base.hpp"
 #include "../include/game_objects/electronic_components/passive_components.hpp"
 #include "../include/game_objects/electronic_components/wire.hpp"

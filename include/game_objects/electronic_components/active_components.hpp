@@ -1,7 +1,6 @@
 #ifndef ACTIVE_COMPONENTS_HPP
 #define ACTIVE_COMPONENTS_HPP
 
-#include "../../../include/input_manager.hpp"
 #include "../../../include/path_utils.hpp"
 #include "../../texture_manager.hpp"
 #include "../../ui_utils.hpp"
