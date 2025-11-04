@@ -1,7 +1,6 @@
 #ifndef LEVEL_MANAGER_H
 #define LEVEL_MANAGER_H
 
-#include "../include/game_objects/electronic_components/active_components.hpp"
 #include "../include/game_objects/electronic_components/electronics_base.hpp"
 #include "../include/game_objects/electronic_components/power_sources.hpp"
 #include "../include/game_objects/electronic_components/wire.hpp"

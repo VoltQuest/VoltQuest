@@ -1,6 +1,5 @@
 #ifndef POWER_SOURCES_HPP
 #define POWER_SOURCES_HPP
-#include "../../../include/input_manager.hpp"
 #include "../../../include/path_utils.hpp"
 #include "../../../include/ui_utils.hpp"
 #include "../../texture_manager.hpp"
