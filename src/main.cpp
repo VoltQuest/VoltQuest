@@ -30,8 +30,11 @@ int main() {
   createWindow();
   calculateScreenScale();
   updateLayout();
-  loadAllUITextures();
+
   ElectronicsLevel::loadTextures();
+  TextureManager::LoadSVG("voltquest_logo",
+                          getResourcePath("assets/logos/voltquest.svg"),
+                          safeScreenScale);
 #if defined(EMSCRIPTEN)
   emscripten_set_main_loop(gameLoop, 0, 1);
 #else
@@ -40,7 +43,6 @@ int main() {
   }
 #endif
 
-  unloadAllUITexture();
   CloseWindow();
   return 0;
 }

@@ -17,7 +17,8 @@ inline void initBasePath() {
 }
 
 inline std::string getResourcePath(const std::string &relativePath) {
-  return basePath + "resources/" + relativePath;
+  return (std::filesystem::path(basePath) / "resources" / relativePath)
+      .string();
 }
 
 #endif // !PATH_UTILS_H

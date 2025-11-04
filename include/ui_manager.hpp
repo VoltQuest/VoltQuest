@@ -17,16 +17,10 @@ struct UIButton {
   bool isfocused;
 };
 
-// Manage Textures
-void loadAllUITextures();
-void loadUITexture(int IMG_ID, const std::string &texturePath);
-void unloadAllUITexture();
-void unloadUITexture(int IMG_ID);
-
 // Draw Functions
 void drawUIRect(float outlineSize, float roundness, const Rectangle &bounds);
 void drawUIButton(const UIButton &button);
-void drawImage(int IMG_ID, const Rectangle &bounds);
+void drawImage(const std::string &name, const Rectangle &bounds);
 void drawUIPanel(const Rectangle &bounds);
 void drawUIText(int fontSize, const Vector2 &textPos, const std::string &text,
                 const Color &textColor);
