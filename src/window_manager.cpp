@@ -4,7 +4,8 @@
 
 void createWindow() {
 #ifndef EMSCRIPTEN
-
+  SetConfigFlags(FLAG_VSYNC_HINT);
+  SetConfigFlags(FLAG_MSAA_4X_HINT);
   InitWindow(0, 0, "VoltQuest");
   int screenWidth = GetScreenWidth();
   int screenHeight = GetScreenHeight();
