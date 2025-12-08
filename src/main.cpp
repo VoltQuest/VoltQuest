@@ -31,7 +31,6 @@ int main() {
   calculateScreenScale();
   updateLayout();
 
-  ElectronicsLevel::loadTextures();
   TextureManager::LoadSVG("voltquest_logo",
                           getResourcePath("assets/logos/voltquest.svg"),
                           safeScreenScale);

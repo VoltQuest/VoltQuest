@@ -1,143 +1,26 @@
 #include "../include/level_manager.hpp"
 #include "../include/game_objects/electronic_components/active_components.hpp"
-#include "../include/game_objects/electronic_components/electronics_base.hpp"
 #include "../include/game_objects/electronic_components/passive_components.hpp"
-#include "../include/game_objects/electronic_components/wire.hpp"
-#include "../include/game_objects/movable_object.hpp"
-#include "../include/path_utils.hpp"
+#include "../include/game_objects/electronic_components/power_sources.hpp"
+#include "../include/input_manager.hpp"
 #include "../include/texture_manager.hpp"
-#include "../include/ui_manager.hpp"
-#include "raylib.h"
+#include "../include/ui_utils.hpp"
 #include <algorithm>
-#include <memory>
-#include <unordered_map>
-#include <vector>
+#include <string>
 
-// ───── InputManager Namespace ─────
-namespace InputManager {
-Vector2 mouse_pos;
-MovableObject *activeDrag = nullptr;
-
-void updateMousePos();
-void updateDragInputs(MovableObject &gameObject);
-} // namespace InputManager
-
-// ───── ElectronicsLevel Namespace ─────
-namespace ElectronicsLevel {
-std::vector<std::shared_ptr<ElectronicComponent>> objects;
-std::shared_ptr<ElectronicComponent> activeObject = nullptr;
-std::vector<Wire> wires;
-bool is_placing_wire = false;
-std::shared_ptr<ElectronicComponent> wireStartObject = nullptr;
-Pin *wireStartPin = nullptr;
-
-void processLevel();
-void resetLevel();
-void loadTextures();
-void updateLevel();
-void drawLevel();
-void drawComponentsPanel(
-    std::vector<std::shared_ptr<ElectronicComponent>> &objects,
-    std::shared_ptr<ElectronicComponent> &activeObject,
-    std::vector<Wire> &wires, bool &isPlacingWire,
-    std::shared_ptr<ElectronicComponent> &wireStartObject);
-} // namespace ElectronicsLevel
-
-// ───── InputManager Implementation ─────
-void InputManager::updateMousePos() { mouse_pos = GetMousePosition(); }
-
-void InputManager::updateDragInputs(MovableObject &gameObject) {
-  Vector2 inputPos = {0, 0};
-  bool inputDown = false;
-  bool inputPressed = false;
-  bool inputReleased = false;
-
-  // Static variables for tracking drag state per object
-  static std::unordered_map<MovableObject *, Vector2> dragOffsets;
-  static std::unordered_map<MovableObject *, int> dragTouchIds;
-
-  int &drag_touch_id = dragTouchIds[&gameObject];
-  if (dragTouchIds.find(&gameObject) == dragTouchIds.end()) {
-    drag_touch_id = -1;
-  }
-
-  // --- Mouse Handling ---
-  if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-    inputPos = GetMousePosition();
-    inputPressed = true;
-    inputDown = true;
-  } else if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
-    inputPos = GetMousePosition();
-    inputDown = true;
-  } else if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
-    inputReleased = true;
-  }
-
-  // --- Touch Handling ---
-  int touchCount = GetTouchPointCount();
-  if (touchCount > 0) {
-    if (drag_touch_id == -1) {
-      for (int i = 0; i < touchCount; i++) {
-        Vector2 tp = GetTouchPosition(i);
-        Rectangle collision = gameObject.getCollider();
-        if (CheckCollisionPointRec(tp, collision)) {
-          inputPos = tp;
-          inputPressed = true;
-          inputDown = true;
-          drag_touch_id = GetTouchPointId(i);
-          break;
-        }
-      }
-    } else {
-      bool found = false;
-      for (int i = 0; i < touchCount; i++) {
-        if (GetTouchPointId(i) == drag_touch_id) {
-          inputPos = GetTouchPosition(i);
-          inputDown = true;
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        inputReleased = true;
-        drag_touch_id = -1;
-      }
-    }
-  }
-
-  Rectangle collision = gameObject.getCollider();
-
-  // --- Start Dragging ---
-  if (inputPressed && CheckCollisionPointRec(inputPos, collision)) {
-    if (activeDrag == nullptr) {
-      dragOffsets[&gameObject] = {inputPos.x - gameObject.position.x,
-                                  inputPos.y - gameObject.position.y};
-      gameObject.is_dragged = true;
-      gameObject.is_active = true; // Set active when starting drag
-      activeDrag = &gameObject;
-    }
-  }
-
-  // --- Stop Dragging ---
-  if (inputReleased && gameObject.is_dragged) {
-    gameObject.is_dragged = false; // Stop dragging
-    // BUT keep is_active = true (stays selected)
-    if (activeDrag == &gameObject) {
-      activeDrag = nullptr;
-    }
-  }
-
-  // --- Move Only If Still Dragging ---
-  if (gameObject.is_dragged && inputDown && activeDrag == &gameObject) {
-    gameObject.position = {inputPos.x - dragOffsets[&gameObject].x,
-                           inputPos.y - dragOffsets[&gameObject].y};
-  }
+ElectronicsLevel::ElectronicsLevel() {
+  is_placing_wire = false;
+  wireStartObject = nullptr;
+  wireStartPin = nullptr;
+  activeObject = nullptr;
 }
 
-// ───── ElectronicsLevel Implementation ─────
+ElectronicsLevel::~ElectronicsLevel() {}
+
 void ElectronicsLevel::processLevel() {
   InputManager::updateMousePos();
   updateLevel();
+
   drawLevel();
 }
 
@@ -148,7 +31,8 @@ void ElectronicsLevel::resetLevel() {
   is_placing_wire = false;
   wireStartObject = nullptr;
   wireStartPin = nullptr;
-  InputManager::activeDrag = nullptr;
+
+  InputManager::ClearActiveSelection();
 }
 
 void ElectronicsLevel::loadTextures() {
@@ -162,14 +46,14 @@ void ElectronicsLevel::loadTextures() {
 }
 
 void ElectronicsLevel::updateLevel() {
-  // Handle left-click input for pin connections AND object selection
+  Vector2 mousePos = InputManager::GetCachedMousePos();
+
   if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
     bool clickedOnPin = false;
 
-    // Try clicking on a Pin first
     for (auto &obj : objects) {
       for (auto &pin : obj->pins) {
-        if (CheckCollisionPointRec(InputManager::mouse_pos, pin.collider)) {
+        if (CheckCollisionPointRec(mousePos, pin.collider)) {
           clickedOnPin = true;
           if (!is_placing_wire) {
             // Start placing wire
@@ -183,25 +67,24 @@ void ElectronicsLevel::updateLevel() {
             wireStartObject = nullptr;
             wireStartPin = nullptr;
           }
-          return;
+          return; // Exit early if we hit a pin
         }
       }
     }
 
-    // If didn't click on pin, check if clicked on an object to select it
+    // 2. Check Object Selection
     if (!clickedOnPin) {
       bool clickedOnObject = false;
 
       for (auto &obj : objects) {
         Rectangle collider = obj->getCollider();
-        if (CheckCollisionPointRec(InputManager::mouse_pos, collider)) {
-          // Deselect all other objects
+        if (CheckCollisionPointRec(mousePos, collider)) {
+          // Deselect others
           for (auto &other : objects) {
-            if (other != obj) {
+            if (other != obj)
               other->is_active = false;
-            }
           }
-          // Select this object
+          // Select this
           obj->is_active = true;
           activeObject = obj;
           clickedOnObject = true;
@@ -209,27 +92,32 @@ void ElectronicsLevel::updateLevel() {
         }
       }
 
-      // If clicked on empty space, deselect all
+      // Clicked Empty Space? Deselect all.
       if (!clickedOnObject) {
-        for (auto &obj : objects) {
+        for (auto &obj : objects)
           obj->is_active = false;
-        }
         activeObject = nullptr;
       }
     }
   }
 
-  // Update all components - including drag inputs
+  // ─── Update Loop & Deletion ───
   for (int i = 0; i < objects.size(); ++i) {
-    // Update drag input for this object
+
+    // 1. Handle Dragging via InputManager
     InputManager::updateDragInputs(*objects[i]);
 
-    // Regular component update
+    // 2. Update Component Logic
     objects[i]->update();
 
-    // Delete component if active and DELETE pressed
+    // 3. Handle Deletion (KEY_DELETE)
     if (objects[i]->is_active && IsKeyPressed(KEY_DELETE)) {
-      // remove all wires connected to any pin of this object
+
+      if (InputManager::GetActiveSelection() == objects[i].get()) {
+        InputManager::ClearActiveSelection();
+      }
+
+      // Remove connected wires
       auto &pins = objects[i]->pins;
       wires.erase(std::remove_if(wires.begin(), wires.end(),
                                  [&](const Wire &w) {
@@ -241,13 +129,15 @@ void ElectronicsLevel::updateLevel() {
                                    return false;
                                  }),
                   wires.end());
-      // now remove the object itself
-      objects[i]->is_active = false;
-      objects[i]->is_dragged = false;
-      activeObject = nullptr;
-      InputManager::activeDrag = nullptr;
+
+      // Clear activeObject pointer if it matches
+      if (activeObject == objects[i]) {
+        activeObject = nullptr;
+      }
+
+      // Finally, delete the object
       objects.erase(objects.begin() + i);
-      break;
+      break; // Stop loop because iterator 'i' is now invalid
     }
   }
 }
@@ -256,36 +146,33 @@ void ElectronicsLevel::drawLevel() {
   BeginDrawing();
   ClearBackground(GRAY);
 
-  // Draw all components
+  // Draw components
   for (auto &obj : objects) {
     obj->draw();
   }
 
-  // Draw all wires
+  // Draw wires
   for (const Wire &wire : wires) {
     wire.draw();
   }
 
-  // Draw preview wire
+  // Draw preview wire (while dragging)
   if (is_placing_wire && wireStartObject && wireStartPin) {
     Vector2 start = wireStartPin->getCenterPosition();
     Color wireColor = wireStartPin->color;
-    DrawLineEx(start, InputManager::mouse_pos, 8.0f * safeScreenScale,
-               BLACK); // Outline
-    DrawLineEx(start, InputManager::mouse_pos, 6.0f * safeScreenScale,
-               wireColor); // Actual wire
+    Vector2 currentMouse = InputManager::GetCachedMousePos();
+
+    DrawLineEx(start, currentMouse, 8.0f * safeScreenScale, BLACK); // Outline
+    DrawLineEx(start, currentMouse, 6.0f * safeScreenScale, wireColor); // Inner
   }
-  // Draw UI side panel
-  drawComponentsPanel(objects, activeObject, wires, is_placing_wire,
-                      wireStartObject);
+
+  // Draw UI
+  drawComponentsPanel();
+
   EndDrawing();
 }
 
-void ElectronicsLevel::drawComponentsPanel(
-    std::vector<std::shared_ptr<ElectronicComponent>> &objects,
-    std::shared_ptr<ElectronicComponent> &activeObject,
-    std::vector<Wire> &wires, bool &isPlacingWire,
-    std::shared_ptr<ElectronicComponent> &wireStartObject) {
+void ElectronicsLevel::drawComponentsPanel() {
   float panelWidth = 450.0f * safeScreenScale;
   Rectangle panelBounds = {
       globalSettings.screenWidth - panelWidth,
@@ -308,7 +195,7 @@ void ElectronicsLevel::drawComponentsPanel(
   float startX = panelBounds.x + (panelBounds.width - totalGridWidth) / 2.0f;
   float startY = panelBounds.y + margin;
 
-  // ───── Component Button Grid ─────
+  // ─── Draw Spawn Buttons ───
   for (int i = 0; i < totalButtons; ++i) {
     int col = i % columns;
     int row = i / columns;
@@ -326,41 +213,37 @@ void ElectronicsLevel::drawComponentsPanel(
 
     if (CheckCollisionPointRec(GetMousePosition(), btnRect) &&
         IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+
       const std::string &name = componentNames[i];
 
       if (name == "Battery") {
-        auto newObj = std::make_shared<Battery>(Vector2{100, 100});
-        objects.push_back(newObj);
+        objects.push_back(std::make_shared<Battery>(Vector2{100, 100}));
       } else if (name == "Led") {
-        auto newObj = std::make_shared<Led>(Vector2{100, 100});
-        objects.push_back(newObj);
+        objects.push_back(std::make_shared<Led>(Vector2{100, 100}));
       } else if (name == "Resistor") {
-        auto newObj = std::make_shared<Resistor>(Vector2{100, 100});
-        objects.push_back(newObj);
+        objects.push_back(std::make_shared<Resistor>(Vector2{100, 100}));
       }
     }
   }
 
-  // ───── ESC to Cancel Wire Mode ─────
-  if (isPlacingWire && IsKeyPressed(KEY_ESCAPE)) {
-    isPlacingWire = false;
-    wireStartObject = nullptr;
-  }
-
-  // ───── Show ESC Hint ─────
-  if (isPlacingWire) {
+  // ─── Wire Cancellation ───
+  if (is_placing_wire) {
+    if (IsKeyPressed(KEY_ESCAPE)) {
+      is_placing_wire = false;
+      wireStartObject = nullptr;
+    }
     DrawText("Press ESC to cancel wire", panelBounds.x + margin,
              globalSettings.screenHeight - margin, 20, DARKGRAY);
   }
 
-  // ───── Divider Line ─────
+  // ─── Divider ───
   float dividerY = panelBounds.y + panelBounds.height / 2.0f;
   DrawLineEx(
       Vector2{panelBounds.x + margin - 5.0f, dividerY},
       Vector2{panelBounds.x + panelBounds.width - margin + 5.0f, dividerY},
       5.0f, Color{180, 180, 200, 255});
 
-  // ───── Inspector Section ─────
+  // ─── Inspector ───
   float inspectorStartY = dividerY + margin;
   float labelFontSize = 28.0f * safeScreenScale;
   float valueFontSize = 24.0f * safeScreenScale;
@@ -369,6 +252,7 @@ void ElectronicsLevel::drawComponentsPanel(
 
   std::vector<std::string> lines;
   lines.push_back("Inspector");
+
   if (activeObject) {
     lines.push_back("Position: (" +
                     std::to_string((int)activeObject->position.x) + ", " +
@@ -387,10 +271,13 @@ void ElectronicsLevel::drawComponentsPanel(
       lines.push_back("Type: Unknown");
     }
   }
+
   for (size_t i = 0; i < lines.size(); ++i) {
     DrawText(lines[i].c_str(), textX, inspectorStartY + i * lineSpacing,
              (i == 0 ? labelFontSize : valueFontSize), DARKGRAY);
   }
+
+  // ─── Reset Button ───
   Rectangle resetBtn = {panelBounds.x + panelBounds.width / 2.0f,
                         panelBounds.y + panelBounds.height -
                             160.0f * safeScreenScale,
@@ -400,6 +287,6 @@ void ElectronicsLevel::drawComponentsPanel(
 
   if (CheckCollisionPointRec(GetMousePosition(), resetBtn) &&
       IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-    ElectronicsLevel::resetLevel();
+    resetLevel();
   }
 }

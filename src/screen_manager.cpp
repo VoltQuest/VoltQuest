@@ -8,6 +8,7 @@
 #include <iostream>
 enum class SCREEN { START_MENU, OPTIONS_MENU, CHAPTER_MENU, LEVEL_MENU, GAME };
 SCREEN currentScreen = SCREEN::START_MENU;
+ElectronicsLevel *current_level = nullptr;
 
 namespace startMenu {
 float logoSize;
@@ -160,10 +161,20 @@ void drawCurrentScreen() {
   }
 
   case SCREEN::GAME: {
-    ElectronicsLevel::processLevel();
+    if (current_level == nullptr) {
+      current_level = new ElectronicsLevel(); // Call the Constructor
+      current_level->loadTextures();          // Load images
+    }
+
+    current_level->processLevel();
+
     if (IsKeyPressed(KEY_Q)) {
       currentScreen = SCREEN::START_MENU;
+
+      delete current_level;
+      current_level = nullptr;
     }
+    break;
   }
   default:
     break;
