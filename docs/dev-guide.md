@@ -21,23 +21,10 @@ This guide helps contributors get started with building and modifying VoltQuest.
 git clone https://github.com/VoltQuest/VoltQuest.git
 cd VoltQuest
 
-mkdir build && cd build
-cmake ..
-cmake --build .
+cmake -S . -B build
+cmake --build build
 
 ```
-
-To run:
-
-```bash
-# On Linux/macOS
-./voltquest
-
-# On Windows (PowerShell)
-.\voltquest.exe
-
-```
-
 ----------
 
 ## 🧭 Code Style Guide
