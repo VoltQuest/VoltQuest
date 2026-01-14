@@ -4,8 +4,6 @@
 #include "../movable_object.hpp"
 #include "raylib.h"
 #include <cstdint>
-#include <string>
-#include <unordered_map>
 #include <vector>
 
 enum class PinType : uint16_t { Power, Ground, Input, Output, BiDirectional };
@@ -26,6 +24,8 @@ struct Pin {
   float voltage = 0.0f;
   float current = 0.0f;
   bool is_connected = false;
+  int index = -1;
+  int node_id = -1;
 
   Pin(Vector2 relPos, PinType pinType)
       : relative_position(relPos), type(pinType) {
@@ -81,6 +81,37 @@ struct ElectronicComponent : public MovableObject {
   };
 
   virtual ~ElectronicComponent() = default;
+};
+
+class Wire {
+private:
+  Pin *pin0 = nullptr;
+  Pin *pin1 = nullptr;
+
+public:
+  Wire(Pin *a, Pin *b) : pin0(a), pin1(b) {}
+
+  Pin *getPin(int index) const { return (index == 0) ? pin0 : pin1; }
+
+  Pin *other(const Pin *p) const {
+    if (p == pin0)
+      return pin1;
+    if (p == pin1)
+      return pin0;
+    return nullptr;
+  }
+
+  void draw() const {
+    if (!pin0 || !pin1)
+      return;
+
+    Vector2 a = pin0->getCenterPosition();
+    Vector2 b = pin1->getCenterPosition();
+    Color wireColor = pin1->color;
+
+    DrawLineEx(a, b, 8.0f * safeScreenScale, BLACK);     // Outline
+    DrawLineEx(a, b, 6.0f * safeScreenScale, wireColor); // Wire
+  }
 };
 
 #endif

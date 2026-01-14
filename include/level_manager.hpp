@@ -2,9 +2,6 @@
 #define LEVEL_MANAGER_H
 
 #include "../include/game_objects/electronic_components/electronics_base.hpp"
-#include "../include/game_objects/electronic_components/power_sources.hpp"
-#include "../include/game_objects/electronic_components/wire.hpp"
-#include "game_objects/movable_object.hpp"
 #include "raylib.h"
 #include "ui_manager.hpp"
 #include <memory>
