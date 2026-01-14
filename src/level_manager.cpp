@@ -20,7 +20,6 @@ ElectronicsLevel::~ElectronicsLevel() {}
 void ElectronicsLevel::processLevel() {
   InputManager::updateMousePos();
   updateLevel();
-
   drawLevel();
 }
 
@@ -122,8 +121,8 @@ void ElectronicsLevel::updateLevel() {
       wires.erase(std::remove_if(wires.begin(), wires.end(),
                                  [&](const Wire &w) {
                                    for (auto &pin : pins) {
-                                     if (w.start_pin == &pin ||
-                                         w.end_pin == &pin)
+                                     if (w.getPin(0) == &pin ||
+                                         w.getPin(1) == &pin)
                                        return true;
                                    }
                                    return false;
