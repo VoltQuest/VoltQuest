@@ -52,7 +52,7 @@ void ElectronicsLevel::updateLevel() {
 
     for (auto &obj : objects) {
       for (auto &pin : obj->pins) {
-        if (CheckCollisionPointRec(mousePos, pin.collider)) {
+        if (pin.isHovered()) {
           clickedOnPin = true;
           if (!is_placing_wire) {
             // Start placing wire
@@ -158,7 +158,7 @@ void ElectronicsLevel::drawLevel() {
   // Draw preview wire (while dragging)
   if (is_placing_wire && wireStartObject && wireStartPin) {
     Vector2 start = wireStartPin->getCenterPosition();
-    Color wireColor = wireStartPin->color;
+    Color wireColor = wireStartPin->getColor();
     Vector2 currentMouse = InputManager::GetCachedMousePos();
 
     DrawLineEx(start, currentMouse, 8.0f * safeScreenScale, BLACK); // Outline

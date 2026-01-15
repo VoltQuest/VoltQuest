@@ -18,6 +18,10 @@ std::unordered_map<std::string, Texture2D> &TextureManager::Registry() {
 void TextureManager::LoadSVG(const std::string &name,
                              const std::string &filePath, float scale) {
   // Validate inputs
+  if (Exists(name)) {
+    printf("ERR:%s Texture already exists\n", name.c_str());
+    return;
+  }
   if (filePath.empty()) {
     return;
   }
