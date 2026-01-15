@@ -1,72 +1,59 @@
 #define NANOSVG_IMPLEMENTATION
 #define NANOSVGRAST_IMPLEMENTATION
+
 #include "../include/texture_manager.hpp"
-#include "cstdint"
 #include "nanosvg.h"
 #include "nanosvgrast.h"
-#include <cstring>
+
+#include <cstdint>
 #include <fstream>
 #include <sstream>
 #include <stdio.h>
-#include <stdlib.h>
+#include <vector>
 
-std::unordered_map<std::string, Texture2D> &TextureManager::Registry() {
-  static std::unordered_map<std::string, Texture2D> textures;
-  return textures;
-}
+// File-local texture store.
+// Textures live for the lifetime of the program and are owned by this TU.
+static std::unordered_map<std::string, Texture2D> textures;
 
 void TextureManager::LoadSVG(const std::string &name,
                              const std::string &filePath, float scale) {
-  // Validate inputs
+  // Prevent accidental double-loads
   if (Exists(name)) {
     printf("ERR:%s Texture already exists\n", name.c_str());
     return;
   }
-  if (filePath.empty()) {
+
+  if (filePath.empty())
     return;
-  }
-  if (scale == 0.0f) {
+  if (scale == 0.0f)
     scale = 1.0f;
-  }
 
-  // Get full path using path_utils
-
-  // Read SVG file
   std::ifstream file(filePath);
   if (!file.is_open()) {
     printf("Failed to open SVG file: %s\n", filePath.c_str());
     return;
   }
 
-  // Read file content into string
   std::stringstream buffer;
   buffer << file.rdbuf();
-  file.close();
-
   std::string svgContent = buffer.str();
+
   if (svgContent.empty()) {
     printf("SVG file is empty: %s\n", filePath.c_str());
     return;
   }
 
-  // Create a mutable copy of the SVG data since nsvgParse modifies it
-  size_t svgLen = svgContent.length();
-  char *svgCopy = (char *)malloc(svgLen + 1);
-  if (!svgCopy) {
-    printf("Failed to allocate memory for SVG copy\n");
-    return;
-  }
-  strcpy(svgCopy, svgContent.c_str());
+  // NanoSVG mutates the input buffer, so we must provide a writable copy
+  std::vector<char> svgCopy(svgContent.begin(), svgContent.end());
+  svgCopy.push_back('\0');
 
-  NSVGimage *svg = nsvgParse(svgCopy, "px", 96.0f);
-  free(svgCopy); // Free the copy immediately after parsing
-
+  NSVGimage *svg = nsvgParse(svgCopy.data(), "px", 96.0f);
   if (!svg) {
     printf("Failed to parse SVG: %s\n", filePath.c_str());
     return;
   }
 
-  // Validate SVG dimensions
+  // Reject malformed SVGs early
   if (svg->width <= 0 || svg->height <= 0) {
     printf("Invalid SVG dimensions: %fx%f\n", svg->width, svg->height);
     nsvgDelete(svg);
@@ -80,84 +67,72 @@ void TextureManager::LoadSVG(const std::string &name,
     return;
   }
 
-  // Calculate final dimensions
-  int w = (int)(svg->width * scale + 0.5f); // Round to nearest int
+  // Final raster size (rounded, clamped)
+  int w = (int)(svg->width * scale + 0.5f);
   int h = (int)(svg->height * scale + 0.5f);
-
-  // Ensure minimum size
   if (w < 1)
     w = 1;
   if (h < 1)
     h = 1;
 
-  // Calculate buffer size with safety check
   size_t pixelCount = (size_t)w * (size_t)h;
-  size_t bufSize = pixelCount * 4; // 4 bytes per pixel (RGBA)
-  if (bufSize == 0 || pixelCount > (SIZE_MAX / 4)) {
+  if (pixelCount > SIZE_MAX / 4) {
     printf("Invalid buffer size calculation\n");
     nsvgDelete(svg);
     nsvgDeleteRasterizer(rast);
     return;
   }
 
-  unsigned char *imgBuffer =
-      (unsigned char *)calloc(bufSize, 1); // Use calloc for zero-init
-  if (!imgBuffer) {
-    printf("Failed to allocate image buffer\n");
-    nsvgDelete(svg);
-    nsvgDeleteRasterizer(rast);
-    return;
-  }
+  // CPU-side RGBA buffer for rasterization
+  std::vector<unsigned char> imgBuffer(pixelCount * 4, 0);
 
-  // Rasterize the SVG
-  nsvgRasterize(rast, svg, 0, 0, scale, imgBuffer, w, h, w * 4);
+  nsvgRasterize(rast, svg, 0, 0, scale, imgBuffer.data(), w, h, w * 4);
 
-  // Create Raylib image
-  Image rlImage = {0};
-  rlImage.data = imgBuffer;
+  Image rlImage = {};
+  rlImage.data = imgBuffer.data();
   rlImage.width = w;
   rlImage.height = h;
   rlImage.mipmaps = 1;
   rlImage.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
 
+  // Upload to GPU; after this, imgBuffer is no longer needed
   Texture2D tex = LoadTextureFromImage(rlImage);
   if (tex.id == 0) {
     printf("Failed to create texture from image\n");
-    free(imgBuffer);
     nsvgDelete(svg);
     nsvgDeleteRasterizer(rast);
     return;
   }
 
-  // Store in registry
-  Registry()[name] = tex;
+  textures[name] = tex;
+
   printf("Successfully loaded SVG texture '%s' from %s (%dx%d)\n", name.c_str(),
          filePath.c_str(), w, h);
 
-  // Clean up
-  free(imgBuffer);
   nsvgDelete(svg);
   nsvgDeleteRasterizer(rast);
 }
 
 Texture2D &TextureManager::Get(const std::string &name) {
-  auto it = Registry().find(name);
-  if (it == Registry().end()) {
-    static Texture2D emptyTexture = {0};
-    return emptyTexture;
+  auto it = textures.find(name);
+  if (it == textures.end()) {
+    // Safe null texture to avoid crashes at call sites
+    static Texture2D empty = {0};
+    return empty;
   }
   return it->second;
 }
 
 bool TextureManager::Exists(const std::string &name) {
-  return Registry().find(name) != Registry().end();
+  return textures.find(name) != textures.end();
 }
 
 void TextureManager::UnloadAll() {
-  for (auto &[name, tex] : Registry()) {
+  // Explicitly free GPU resources
+  for (auto &[name, tex] : textures) {
     if (tex.id != 0) {
       UnloadTexture(tex);
     }
   }
-  Registry().clear();
+  textures.clear();
 }

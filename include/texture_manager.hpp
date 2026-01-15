@@ -6,9 +6,6 @@
 #include <unordered_map>
 
 struct TextureManager {
-  static std::unordered_map<std::string, Texture2D> &Registry();
-
-  // Load SVG from file path (relative to resources directory)
   static void LoadSVG(const std::string &name, const std::string &filePath,
                       float scale = 1.0f);
 
@@ -17,4 +14,4 @@ struct TextureManager {
   static void UnloadAll();
 };
 
-#endif // TEXTURE_MANAGER_HPP
+#endif
