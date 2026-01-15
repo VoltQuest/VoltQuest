@@ -6,53 +6,66 @@
 #include <cstdint>
 #include <vector>
 
-enum class PinType : uint16_t { Power, Ground, Input, Output, BiDirectional };
+enum class PinType : uint8_t { Power, Ground, Input, Output, BiDirectional };
 
-enum class ComponentLabel : uint16_t {
+enum class ComponentLabel : uint8_t {
   Battery = 0,
   Led = 1,
   Resistor = 2,
   Switch = 3,
 };
 
-struct Pin {
+class Pin {
+
+private:
   Vector2 relative_position;
   Rectangle collider;
-  float colliderSize = 16.0f * safeScreenScale;
+  float collider_size = 16.0f * safeScreenScale;
   PinType type;
-  Color color;
   float voltage = 0.0f;
   float current = 0.0f;
   bool is_connected = false;
-  int index = -1;
-  int node_id = -1;
+  int16_t index = -1;
+  int16_t node_id = -1;
 
+public:
   Pin(Vector2 relPos, PinType pinType)
       : relative_position(relPos), type(pinType) {
-    collider.width = colliderSize;
-    collider.height = colliderSize;
-
-    color = (type == PinType::Power)    ? RED
-            : (type == PinType::Ground) ? BLACK
-                                        : GREEN;
+    collider.width = collider_size;
+    collider.height = collider_size;
   }
 
   Vector2 getWorldPosition(const Vector2 &componentPos) const {
     return {componentPos.x + relative_position.x,
             componentPos.y + relative_position.y};
   }
+  Vector2 getCenterPosition() const {
+    return {collider.x + collider.width / 2.0f,
+            collider.y + collider.height / 2.0f};
+  }
+
+  PinType getPinType() const { return type; }
+
+  Color getColor() const {
+    return (type == PinType::Power)    ? RED
+           : (type == PinType::Ground) ? BLACK
+                                       : GREEN;
+  }
+
+  Vector2 getColliderPosition() const {
+    return (Vector2){collider.x, collider.y};
+  }
+
+  float getColliderSize() const { return collider_size; }
 
   void updateCollider(const Vector2 &componentPos) {
-    collider.x = componentPos.x + relative_position.x - (colliderSize / 2.0f);
-    collider.y = componentPos.y + relative_position.y - (colliderSize / 2.0f);
+    collider.x = componentPos.x + relative_position.x - (collider.width / 2.0f);
+    collider.y =
+        componentPos.y + relative_position.y - (collider.height / 2.0f);
   }
 
   bool isHovered() const {
     return (CheckCollisionPointRec(GetMousePosition(), collider));
-  }
-
-  Vector2 getCenterPosition() const {
-    return {collider.x + colliderSize / 2.0f, collider.y + colliderSize / 2.0f};
   }
 };
 
@@ -74,8 +87,9 @@ struct ElectronicComponent : public MovableObject {
   virtual void drawPins() const {
     for (const auto &pin : pins) {
       if (pin.isHovered()) {
-        DrawRectangle(pin.collider.x, pin.collider.y, pin.colliderSize,
-                      pin.colliderSize, pin.color);
+        DrawRectangle(pin.getColliderPosition().x, pin.getColliderPosition().y,
+                      pin.getColliderSize(), pin.getColliderSize(),
+                      pin.getColor());
       }
     }
   };
@@ -107,7 +121,7 @@ public:
 
     Vector2 a = pin0->getCenterPosition();
     Vector2 b = pin1->getCenterPosition();
-    Color wireColor = pin1->color;
+    Color wireColor = pin1->getColor();
 
     DrawLineEx(a, b, 8.0f * safeScreenScale, BLACK);     // Outline
     DrawLineEx(a, b, 6.0f * safeScreenScale, wireColor); // Wire
