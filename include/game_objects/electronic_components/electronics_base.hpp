@@ -97,13 +97,13 @@ struct ElectronicComponent : public MovableObject {
   virtual ~ElectronicComponent() = default;
 };
 
-class Wire {
+class Connection {
 private:
   Pin *pin0 = nullptr;
   Pin *pin1 = nullptr;
 
 public:
-  Wire(Pin *a, Pin *b) : pin0(a), pin1(b) {}
+  Connection(Pin *a, Pin *b) : pin0(a), pin1(b) {}
 
   Pin *getPin(int index) const { return (index == 0) ? pin0 : pin1; }
 
@@ -121,10 +121,25 @@ public:
 
     Vector2 a = pin0->getCenterPosition();
     Vector2 b = pin1->getCenterPosition();
+
+    // Distance based visibility
+    constexpr float DRAW_THRESHOLD = 20.0f; // base pixels
+    float threshold = DRAW_THRESHOLD * safeScreenScale;
+
+    float dx = a.x - b.x;
+    float dy = a.y - b.y;
+    float distSq = dx * dx + dy * dy;
+
+    if (distSq <= threshold * threshold) {
+      // Pins are close enough, implicit connection, no wire drawn
+      return;
+    }
+
+    // Draw visual wire
     Color wireColor = pin1->getColor();
 
     DrawLineEx(a, b, 8.0f * safeScreenScale, BLACK);     // Outline
-    DrawLineEx(a, b, 6.0f * safeScreenScale, wireColor); // Wire
+    DrawLineEx(a, b, 6.0f * safeScreenScale, wireColor); // Inner
   }
 };
 
