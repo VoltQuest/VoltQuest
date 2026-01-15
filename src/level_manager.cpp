@@ -5,32 +5,33 @@
 #include "../include/input_manager.hpp"
 #include "../include/texture_manager.hpp"
 #include "../include/ui_utils.hpp"
+
 #include <algorithm>
+#include <iostream>
 #include <string>
 
-ElectronicsLevel::ElectronicsLevel() {
-  is_placing_wire = false;
-  wireStartObject = nullptr;
-  wireStartPin = nullptr;
-  activeObject = nullptr;
-}
+static constexpr float SNAP_RADIUS_PX = 10.0f;
 
+ElectronicsLevel::ElectronicsLevel() {}
 ElectronicsLevel::~ElectronicsLevel() {}
 
 void ElectronicsLevel::processLevel() {
   InputManager::updateMousePos();
   updateLevel();
   drawLevel();
+  for (auto c : connections) {
+    int i = 0;
+    std::cout << "wire:" << i << '\n';
+    i++;
+  }
 }
 
 void ElectronicsLevel::resetLevel() {
   objects.clear();
-  wires.clear();
+  connections.clear();
   activeObject = nullptr;
   is_placing_wire = false;
-  wireStartObject = nullptr;
   wireStartPin = nullptr;
-
   InputManager::ClearActiveSelection();
 }
 
@@ -44,130 +45,146 @@ void ElectronicsLevel::loadTextures() {
                           safeScreenScale);
 }
 
+// Helpers
+Pin *ElectronicsLevel::findSnapTarget(Pin *source, float radius) const {
+  Vector2 a = source->getCenterPosition();
+
+  for (auto &obj : objects) {
+    for (auto &pin : obj->pins) {
+      Pin *p = &pin;
+      if (p == source)
+        continue;
+
+      Vector2 b = p->getCenterPosition();
+      float dx = a.x - b.x;
+      float dy = a.y - b.y;
+
+      if ((dx * dx + dy * dy) <= radius * radius)
+        return p;
+    }
+  }
+  return nullptr;
+}
+
+bool ElectronicsLevel::hasConnection(Pin *a, Pin *b) const {
+  for (const auto &c : connections) {
+    if ((c.getPin(0) == a && c.getPin(1) == b) ||
+        (c.getPin(0) == b && c.getPin(1) == a))
+      return true;
+  }
+  return false;
+}
+
+// Update
 void ElectronicsLevel::updateLevel() {
-  Vector2 mousePos = InputManager::GetCachedMousePos();
+  Vector2 mouse = InputManager::GetCachedMousePos();
+  bool mouseReleased = IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 
+  // click handling
   if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-    bool clickedOnPin = false;
-
     for (auto &obj : objects) {
       for (auto &pin : obj->pins) {
         if (pin.isHovered()) {
-          clickedOnPin = true;
+
           if (!is_placing_wire) {
-            // Start placing wire
-            wireStartObject = obj;
             wireStartPin = &pin;
             is_placing_wire = true;
-          } else if (wireStartObject && wireStartPin && &pin != wireStartPin) {
-            // Complete wire connection
-            wires.emplace_back(wireStartPin, &pin);
-            is_placing_wire = false;
-            wireStartObject = nullptr;
+          } else if (wireStartPin && &pin != wireStartPin) {
+            if (!hasConnection(wireStartPin, &pin))
+              connections.emplace_back(wireStartPin, &pin);
+
             wireStartPin = nullptr;
+            is_placing_wire = false;
           }
-          return; // Exit early if we hit a pin
+          return;
         }
       }
     }
 
-    // 2. Check Object Selection
-    if (!clickedOnPin) {
-      bool clickedOnObject = false;
-
-      for (auto &obj : objects) {
-        Rectangle collider = obj->getCollider();
-        if (CheckCollisionPointRec(mousePos, collider)) {
-          // Deselect others
-          for (auto &other : objects) {
-            if (other != obj)
-              other->is_active = false;
-          }
-          // Select this
-          obj->is_active = true;
-          activeObject = obj;
-          clickedOnObject = true;
-          break;
-        }
+    // object selection
+    bool hit = false;
+    for (auto &obj : objects) {
+      if (CheckCollisionPointRec(mouse, obj->getCollider())) {
+        for (auto &o : objects)
+          o->is_active = false;
+        obj->is_active = true;
+        activeObject = obj;
+        hit = true;
+        break;
       }
+    }
 
-      // Clicked Empty Space? Deselect all.
-      if (!clickedOnObject) {
-        for (auto &obj : objects)
-          obj->is_active = false;
-        activeObject = nullptr;
-      }
+    if (!hit) {
+      for (auto &o : objects)
+        o->is_active = false;
+      activeObject = nullptr;
     }
   }
 
-  // ─── Update Loop & Deletion ───
+  // update objects
   for (int i = 0; i < objects.size(); ++i) {
-
-    // 1. Handle Dragging via InputManager
     InputManager::updateDragInputs(*objects[i]);
-
-    // 2. Update Component Logic
     objects[i]->update();
 
-    // 3. Handle Deletion (KEY_DELETE)
     if (objects[i]->is_active && IsKeyPressed(KEY_DELETE)) {
 
-      if (InputManager::GetActiveSelection() == objects[i].get()) {
-        InputManager::ClearActiveSelection();
-      }
-
-      // Remove connected wires
       auto &pins = objects[i]->pins;
-      wires.erase(std::remove_if(wires.begin(), wires.end(),
-                                 [&](const Wire &w) {
-                                   for (auto &pin : pins) {
-                                     if (w.getPin(0) == &pin ||
-                                         w.getPin(1) == &pin)
-                                       return true;
-                                   }
-                                   return false;
-                                 }),
-                  wires.end());
+      connections.erase(std::remove_if(connections.begin(), connections.end(),
+                                       [&](const Connection &c) {
+                                         for (auto &p : pins)
+                                           if (c.getPin(0) == &p ||
+                                               c.getPin(1) == &p)
+                                             return true;
+                                         return false;
+                                       }),
+                        connections.end());
 
-      // Clear activeObject pointer if it matches
-      if (activeObject == objects[i]) {
-        activeObject = nullptr;
-      }
-
-      // Finally, delete the object
       objects.erase(objects.begin() + i);
-      break; // Stop loop because iterator 'i' is now invalid
+      activeObject = nullptr;
+      break;
+    }
+  }
+
+  if (mouseReleased) {
+    float snapDist = SNAP_RADIUS_PX * safeScreenScale;
+
+    for (auto &obj : objects) {
+      for (auto &pin : obj->pins) {
+        Pin *p = &pin;
+        Pin *target = findSnapTarget(p, snapDist);
+        if (!target)
+          continue;
+
+        if (!hasConnection(p, target)) {
+          connections.emplace_back(p, target);
+        }
+      }
     }
   }
 }
 
+// Draw
 void ElectronicsLevel::drawLevel() {
   BeginDrawing();
   ClearBackground(GRAY);
 
-  // Draw components
-  for (auto &obj : objects) {
+  for (auto &obj : objects)
     obj->draw();
+
+  for (const Connection &c : connections)
+    c.draw();
+
+  // wire preview
+  if (is_placing_wire && wireStartPin) {
+    Vector2 a = wireStartPin->getCenterPosition();
+    Vector2 b = InputManager::GetCachedMousePos();
+    Color col = wireStartPin->getColor();
+
+    DrawLineEx(a, b, 8.0f * safeScreenScale, BLACK);
+    DrawLineEx(a, b, 6.0f * safeScreenScale, col);
   }
 
-  // Draw wires
-  for (const Wire &wire : wires) {
-    wire.draw();
-  }
-
-  // Draw preview wire (while dragging)
-  if (is_placing_wire && wireStartObject && wireStartPin) {
-    Vector2 start = wireStartPin->getCenterPosition();
-    Color wireColor = wireStartPin->getColor();
-    Vector2 currentMouse = InputManager::GetCachedMousePos();
-
-    DrawLineEx(start, currentMouse, 8.0f * safeScreenScale, BLACK); // Outline
-    DrawLineEx(start, currentMouse, 6.0f * safeScreenScale, wireColor); // Inner
-  }
-
-  // Draw UI
   drawComponentsPanel();
-
   EndDrawing();
 }
 
@@ -194,7 +211,7 @@ void ElectronicsLevel::drawComponentsPanel() {
   float startX = panelBounds.x + (panelBounds.width - totalGridWidth) / 2.0f;
   float startY = panelBounds.y + margin;
 
-  // ─── Draw Spawn Buttons ───
+  // Draw buttons
   for (int i = 0; i < totalButtons; ++i) {
     int col = i % columns;
     int row = i / columns;
@@ -225,7 +242,7 @@ void ElectronicsLevel::drawComponentsPanel() {
     }
   }
 
-  // ─── Wire Cancellation ───
+  // Wire Cancellation
   if (is_placing_wire) {
     if (IsKeyPressed(KEY_ESCAPE)) {
       is_placing_wire = false;
@@ -235,14 +252,14 @@ void ElectronicsLevel::drawComponentsPanel() {
              globalSettings.screenHeight - margin, 20, DARKGRAY);
   }
 
-  // ─── Divider ───
+  // Divider
   float dividerY = panelBounds.y + panelBounds.height / 2.0f;
   DrawLineEx(
       Vector2{panelBounds.x + margin - 5.0f, dividerY},
       Vector2{panelBounds.x + panelBounds.width - margin + 5.0f, dividerY},
       5.0f, Color{180, 180, 200, 255});
 
-  // ─── Inspector ───
+  // Inspector
   float inspectorStartY = dividerY + margin;
   float labelFontSize = 28.0f * safeScreenScale;
   float valueFontSize = 24.0f * safeScreenScale;
@@ -276,7 +293,7 @@ void ElectronicsLevel::drawComponentsPanel() {
              (i == 0 ? labelFontSize : valueFontSize), DARKGRAY);
   }
 
-  // ─── Reset Button ───
+  // Reset Button
   Rectangle resetBtn = {panelBounds.x + panelBounds.width / 2.0f,
                         panelBounds.y + panelBounds.height -
                             160.0f * safeScreenScale,

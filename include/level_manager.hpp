@@ -10,16 +10,20 @@
 class ElectronicsLevel {
 private:
   std::vector<std::shared_ptr<ElectronicComponent>> objects;
-  std::vector<Wire> wires;
+  std::vector<Connection> connections;
 
   std::shared_ptr<ElectronicComponent> activeObject;
   bool is_placing_wire = false;
   std::shared_ptr<ElectronicComponent> wireStartObject = nullptr;
   Pin *wireStartPin = nullptr;
 
+  Pin *findSnapTarget(Pin *source, float radius) const;
+  bool hasConnection(Pin *a, Pin *b) const;
+
 public:
   ElectronicsLevel();
   ~ElectronicsLevel();
+
   void processLevel();
   void resetLevel();
   void loadTextures();
