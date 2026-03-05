@@ -11,9 +11,7 @@
 
 void resetLevel();
 
-// ─────────────────────────────────────────────────────
 // Draw Functions
-// ─────────────────────────────────────────────────────
 void drawUIRect(float outlineSize, float roundness, const Rectangle &bounds) {
   DrawRectangleRounded(bounds, roundness, 6, Color{151, 151, 165, 255});
   DrawRectangleRounded(
@@ -74,9 +72,7 @@ void drawUITextCentered(int fontSize, const Rectangle &bounds,
   DrawText(text.c_str(), textPos.x, textPos.y, scaledFontSize, textColor);
 }
 
-// ─────────────────────────────────────────────────────
 // Input Functions
-// ─────────────────────────────────────────────────────
 bool isUIButtonPressed(const UIButton &button) {
   Vector2 inputPos = GetMousePosition();
   bool isHovered = CheckCollisionPointRec(inputPos, button.bounds);

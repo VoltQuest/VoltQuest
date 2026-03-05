@@ -2,11 +2,10 @@
 #include <unordered_map>
 
 namespace InputManager {
-// ───── PRIVATE STATE ─────
+// Private State
 static Vector2 internal_mouse_pos = {0, 0};
-static MovableObject *active_selection = nullptr; // Renamed from activeDrag
+static MovableObject *active_selection = nullptr;
 
-// ───── PUBLIC INTERFACE ─────
 
 Vector2 GetCachedMousePos() { return internal_mouse_pos; }
 
@@ -25,9 +24,6 @@ void updateDragInputs(MovableObject &gameObject) {
   static std::unordered_map<MovableObject *, Vector2> dragOffsets;
   static std::unordered_map<MovableObject *, int> dragTouchIds;
 
-  // ... [Mouse/Touch logic remains the same] ...
-  // (Copy the Mouse/Touch detection block from previous steps)
-  // For brevity, assuming standard detection logic here:
   if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
     inputPos = GetMousePosition();
     inputPressed = true;
@@ -41,9 +37,8 @@ void updateDragInputs(MovableObject &gameObject) {
 
   Rectangle collision = gameObject.getCollider();
 
-  // ───── LOGIC USING NEW VARIABLE NAME ─────
 
-  // --- Start Dragging ---
+  // Start Dragging
   if (inputPressed && CheckCollisionPointRec(inputPos, collision)) {
     // Only start if nothing is currently selected
     if (active_selection == nullptr) {
@@ -57,7 +52,7 @@ void updateDragInputs(MovableObject &gameObject) {
     }
   }
 
-  // --- Stop Dragging ---
+  // Stop Dragging
   if (inputReleased && gameObject.is_dragged) {
     gameObject.is_dragged = false;
 
@@ -67,7 +62,6 @@ void updateDragInputs(MovableObject &gameObject) {
     }
   }
 
-  // --- Move Only If Still Dragging ---
   if (gameObject.is_dragged && inputDown && active_selection == &gameObject) {
     gameObject.position = {inputPos.x - dragOffsets[&gameObject].x,
                            inputPos.y - dragOffsets[&gameObject].y};

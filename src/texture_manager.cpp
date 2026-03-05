@@ -11,8 +11,7 @@
 #include <stdio.h>
 #include <vector>
 
-// File-local texture store.
-// Textures live for the lifetime of the program and are owned by this TU.
+// Textures live for the lifetime of the program and are owned by this.
 static std::unordered_map<std::string, Texture2D> textures;
 
 void TextureManager::LoadSVG(const std::string &name,

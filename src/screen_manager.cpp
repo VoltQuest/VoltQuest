@@ -39,7 +39,7 @@ Vector2 optionsTextPos;
 } // namespace optionsMenu
 
 void updateLayout() {
-  // ─── Start Menu ────────────────────────────────
+  // Start Menu
   {
     startMenu::logoSize = 450.0f * safeScreenScale;
     startMenu::buttonSize = {360.0f * safeScreenScale,
@@ -97,7 +97,7 @@ void updateLayout() {
 #endif
   }
 
-  // ─── Options Menu ──────────────────────────────
+  // Options Menu
   {
     optionsMenu::panelSize = {1000.0f * safeScreenScale,
                               900.0f * safeScreenScale}; // Static panel size

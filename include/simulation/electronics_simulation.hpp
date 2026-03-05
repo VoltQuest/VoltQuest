@@ -7,11 +7,9 @@
 
 class ElectronicsSimulation {
 public:
-  // Build / rebuild topology (expensive)
   void build(const std::vector<std::shared_ptr<ElectronicComponent>> &objects,
              const std::vector<Wire> &node_edges);
 
-  // Solve using cached topology (cheap, repeatable)
   void solve();
 
   // Explicit invalidation hook
