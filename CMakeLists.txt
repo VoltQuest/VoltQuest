@@ -6,9 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 # Include FetchContent module
 include(FetchContent)
 
-# =====================
 # Fetch raylib
-# =====================
 message(STATUS "Fetching raylib...")
 FetchContent_Declare(
   raylib
@@ -19,9 +17,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(raylib)
 message(STATUS "Fetched raylib successfully")
 
-# =====================
 # Fetch nanosvg
-# =====================
 message(STATUS "Fetching nanosvg...")
 FetchContent_Declare(
   nanosvg
@@ -30,17 +26,10 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(nanosvg)
 message(STATUS "Fetched nanosvg successfully")
 
-# Tell compiler where to find nanosvg headers
-FetchContent_GetProperties(nanosvg)
-if(NOT nanosvg_POPULATED)
-  FetchContent_Populate(nanosvg)
-endif()
 # Add include path so `#include "nanosvg.h"` works
 include_directories(${nanosvg_SOURCE_DIR}/src)
 
-# =====================
 # Fetch nlohmann_json
-# =====================
 message(STATUS "Fetching nlohmann/json...")
 FetchContent_Declare(
   nlohmann_json
@@ -50,9 +39,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(nlohmann_json)
 message(STATUS "Fetched nlohmann/json successfully")
 
-# =====================
 # Source files
-# =====================
 file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 add_executable(voltquest ${SRC_FILES})
 
@@ -77,9 +64,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     )
 endif()
 
-# =====================
 # Copy resources folder next to built executable
-# =====================
 add_custom_command(
     TARGET voltquest POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
