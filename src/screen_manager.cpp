@@ -49,7 +49,6 @@ void updateLayout() {
         (baseHeight / 2.0f * screenScaleY) - (startMenu::logoSize),
         startMenu::logoSize, startMenu::logoSize};
 
-#ifndef EMSCRIPTEN
     startMenu::button_count = 3;
 
     startMenu::playButton = {
@@ -75,26 +74,6 @@ void updateLayout() {
         "QUIT",
         55,
         RED};
-
-#else
-    startMenu::button_count = 2;
-    startMenu::playButton = {
-        {(baseWidth / 2.0f * screenScaleX) - (startMenu::buttonSize.x / 2.0f),
-         (baseHeight / 1.7f * screenScaleY), startMenu::buttonSize.x,
-         startMenu::buttonSize.y},
-        "PLAY",
-        55,
-        Color{255, 198, 0, 255}};
-
-    startMenu::optionsButton = {
-        {(baseWidth / 2.0f * screenScaleX) - (startMenu::buttonSize.x / 2.0f),
-         (baseHeight / 1.7f * screenScaleY) + (180.f * screenScaleY),
-         startMenu::buttonSize.x, startMenu::buttonSize.y},
-        "OPTIONS",
-        55,
-        Color{0, 146, 255, 255}};
-
-#endif
   }
 
   // Options Menu
